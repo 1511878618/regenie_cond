@@ -50,7 +50,7 @@ def filter_regenie(
         for line in f:
             if line_idx == 0:
                 header = line.strip().split()
-                continue
+                # continue
             else:
                 line = line.strip().split()
                 line_dict = dict(zip(header, line))
@@ -110,7 +110,7 @@ def extract_snp_from_regenie_summary(
         for line in f:
             if line_idx == 0:
                 header = line.strip().split()
-                continue
+                
             else:
                 line = line.strip().split()
                 line_dict = dict(zip(header, line))
