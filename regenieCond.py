@@ -10,11 +10,11 @@
 
 import argparse
 import subprocess
-import os
+
 from pathlib import Path
-import gzip
 import shutil
 from typing import Union, List, Dict, Any, Tuple
+import textwrap
 
 import sys
 
@@ -496,9 +496,33 @@ class RegenieConditionalAnalysis:
 
         sys.stdout.write(f"result path: {str(final_result_path)}\n")
 
-
 def get_parser():
     parser = argparse.ArgumentParser(description="Conditional Analysis By regenie")
+
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description=textwrap.dedent(
+            """
+        %prog Conditional Analysis By regenie
+        @Author: xutingfeng@big.ac.cn
+        Version: 1.0
+        Example Code:
+        1. if no --covarColList and --catCovarList, will use default setting or add this 
+        
+        regenieCond.py --pgen test/test --phenoFile sup/regenie_bt.tsv --bt  --phenoCol cad --covarFile sup/regenie.cov --bsize 1000 --pred tmp_step1/bt_step1_pred.list  --ref-first 
+
+        2. if no --summary, will run step2 again, and will use default setting or add this
+
+        3. if --summary, will use this summary file and wont run step2 again, and will use default setting or add this
+
+        4. if use --condsnp-path or --condsnp-list, will use this condsnp list, and will use default setting or add this
+
+        if no --condsnp-path and --condsnp-list, will use gwas result as condsnp list, and will use default setting or add this
+
+
+        """
+        ),
+    )
     parser.add_argument("--pgen", required=True, help="plink pgen path")
     parser.add_argument("--phenoFile", required=True, help="phenotype file path")
     parser.add_argument(
