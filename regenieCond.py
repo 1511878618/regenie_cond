@@ -124,7 +124,7 @@ def extract_snp_from_regenie_summary(
                 if snp_id in snp_id_list:
                     extracted_snp_list.append(line_dict)
                 else: # check is : sep and sorted?
-                    sorted_snp_id = check_sorted_snpid()
+                    sorted_snp_id = check_sorted_snpid(snp_id)
                     if sorted_snp_id is not None and sorted_snp_id in snp_id_list: # sorted and matched
                         extracted_snp_list.append(line_dict)
                         sys.stdout.write(f"Warning: {snp_id} is not sorted, but passed\n with {sorted_snp_id}")
