@@ -382,6 +382,7 @@ class RegenieConditionalAnalysis:
                 current_regenie_args = regenie_default_args.copy()
                 current_regenie_args["out"] = str(current_dir) + "/"
                 current_regenie_args["condition-list"] = str(used_cond_snp_list_path)
+                current_regenie_args["exclude"] = str(exclude_snp_path)
                 # cond_params pass
                 regenie_engine = Regenie(**current_regenie_args)
                 regenie_engine()  # run
