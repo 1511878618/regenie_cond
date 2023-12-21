@@ -339,6 +339,7 @@ class RegenieConditionalAnalysis:
 
         # already haved cond snp list
         already_haved_cond_snp_list = []
+        exclude_snp_list = None # init var
         used_cond_snp_list_path = output_path / "used_cond_snp_list.csv"
 
         # exclude_snp_path
