@@ -136,7 +136,6 @@ def extract_snp_from_regenie_summary(
                         sys.stdout.write(
                             f"Warning: {snp_id} is not sorted, but passed with {sorted_snp_id}\n"
                         )
-                        extracted_snp_list.append(line_dict)
 
             line_idx += 1
     if len(extracted_snp_list) != len(snp_id_list):
