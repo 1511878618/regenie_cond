@@ -483,7 +483,7 @@ class RegenieConditionalAnalysis:
                 # update exclude snp to final result file
                 with open(final_result_path, "a") as f:
                     for snp_dict in exclude_snp_list:
-                        snp_dict["FAILDTIME"] = iter_count
+                        snp_dict["FAILDTIME"] = str(iter_count)
                         line = "\t".join(snp_dict.values())
                         f.write(line + "\n")
 
