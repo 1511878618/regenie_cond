@@ -129,9 +129,7 @@ def extract_snp_from_regenie_summary(
                         extracted_snp_list.append(line_dict)
                         sys.stdout.write(f"Warning: {snp_id} is not sorted, but passed\n with {sorted_snp_id}")
                         extracted_snp_list.append(line_dict)
-                    else: # even sorted and not match
-                        sys.stdout.write(f"Warning: {snp_id} not passed\n")
-            
+             
             line_idx += 1
     if len(extracted_snp_list) != len(snp_id_list):
         for snp_id in snp_id_list:
@@ -455,8 +453,8 @@ class RegenieConditionalAnalysis:
 
             # update leadning snp to stdout
             for snp_dict in condsnp_list:
-                sys.stdout.write("\t".join(snp_dict.keys()))
-                sys.stdout.write("\t".join(snp_dict.values()))
+                sys.stdout.write("\t".join(snp_dict.keys()) + "\n")
+                sys.stdout.write("\t".join(snp_dict.values())+ "\n")
 
             if (
                 cond_args["max-condsnp"] != -1
