@@ -487,6 +487,7 @@ class RegenieConditionalAnalysis:
                         snp_dict["FAILDTIME"] = str(iter_count)
                         line = "\t".join(snp_dict.values())
                         f.write(line + "\n")
+            iter_count += 1
 
                 
                     
