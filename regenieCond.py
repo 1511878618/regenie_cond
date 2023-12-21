@@ -21,35 +21,6 @@ import sys
 flags = ["lowmem", "ref-first", "bt", "qt"]  # TODO: may add all flags
 default_exclude_log10p_cutoff = 1
 
-
-def format_table(input_string):
-    """
-    Formats the input string into a table format. The input string is expected
-    to have tab-separated values for columns and newline-separated values for rows.
-
-    :param input_string: A string representing the table with tab-separated columns and newline-separated rows.
-    :return: A formatted table as a string.
-    """
-
-    # Splitting the string into rows and then into columns
-    rows = [row.split('\t') for row in input_string.strip().split('\n')]
-
-    # Finding the maximum width of each column
-    column_widths = [max(len(str(item)) for item in column) for column in zip(*rows)]
-
-    # Formatting each cell and creating the formatted table
-    formatted_rows = []
-    for row in rows:
-        formatted_row = "|".join(str(item).ljust(width) for item, width in zip(row, column_widths))
-        formatted_rows.append(formatted_row)
-
-    # Joining all rows into a single string
-    formatted_table = '\n'.join(formatted_rows)
-
-    return formatted_table
-
-
-
 def filter_regenie(
     regenie_summary_path: Union[str, Path],
     log10p_cutoff: float = 6,
@@ -155,7 +126,7 @@ def extract_snp_from_regenie_summary(
                     sorted_snp_id = check_sorted_snpid(snp_id)
                     if sorted_snp_id is not None and sorted_snp_id in snp_id_list: # sorted and matched
                         extracted_snp_list.append(line_dict)
-                        sys.stdout.write(f"Warning: {snp_id} is not sorted, but passed\n with {sorted_snp_id}")
+                        sys.stdout.write(f"Warning: {snp_id} is not sorted, but passed with {sorted_snp_id}\n")
                         extracted_snp_list.append(line_dict)
              
             line_idx += 1
@@ -341,7 +312,7 @@ class RegenieConditionalAnalysis:
                 ]
                 args_dict["maxCatLevels"] = 30
                 sys.stdout.write(
-                    f"will use default setting for covar, that is: {' '.join(args_dict['covarColList'])}"
+                    f"will use default setting for covar, that is: {' '.join(args_dict['covarColList'])}\n"
                 )
             # conditional analysis should use specific pheno, so if phenoCol is None, raise warning
             if args_dict["phenoCol"] is None:
@@ -367,7 +338,7 @@ class RegenieConditionalAnalysis:
             output_path.mkdir(parents=True, exist_ok=True)
 
         # already haved cond snp list
-        already_haved_cond_snp_list = []
+        # already_haved_cond_snp_list = []
         exclude_snp_list = None # init var
         used_cond_snp_list_path = output_path / "used_cond_snp_list.csv"
 
@@ -431,7 +402,7 @@ class RegenieConditionalAnalysis:
                         cond_args["defaultLOG10P"],
                         cond_args["defaultFREQ"],
                         exclude_log10p_cutoff=default_exclude_log10p_cutoff
-                        if cond_args["disable-exclude-mode"]
+                        if not cond_args["disable-exclude-mode"]
                         else None,
                     )
                 else:
@@ -469,14 +440,14 @@ class RegenieConditionalAnalysis:
                             exclude_log10p_cutoff=default_exclude_log10p_cutoff ,
                         )
 
-            else:
+            else:   
                 # not the first iteration
                 # extract leading from current_regenie_output_file
                 condsnp_list, exclude_snp_list = filter_regenie(
                     current_regenie_output_file,
                     cond_args["defaultLOG10P"],
                     cond_args["defaultFREQ"],
-                    exclude_log10p_cutoff=default_exclude_log10p_cutoff if cond_args["disable-exclude-mode"] else None,
+                    exclude_log10p_cutoff=default_exclude_log10p_cutoff if not cond_args["disable-exclude-mode"] else None,
                 )
 
             if len(condsnp_list) == 0:
@@ -486,7 +457,7 @@ class RegenieConditionalAnalysis:
                 break
 
             # update already_haved_cond_snp_list with current condsnp_list
-            already_haved_cond_snp_list.append(condsnp_list)
+            # already_haved_cond_snp_list.append(condsnp_list)
 
             # save condsnp_list to file, appendix mode
             with open(used_cond_snp_list_path, "a") as f:
@@ -497,7 +468,7 @@ class RegenieConditionalAnalysis:
             # update leadning snp to stdout
             try:
                 import pandas as pd 
-                sys.stdout.write(pd.DataFrame(condsnp_list).to_string())
+                sys.stdout.write(pd.DataFrame(condsnp_list).to_string() + "\n")
             except:
 
                 sys.stdout.write("\t".join(condsnp_list[0].keys()) + "\n") # write header 
