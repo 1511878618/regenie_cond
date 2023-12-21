@@ -82,6 +82,12 @@ def filter_regenie(
     else:
         return passed_snp_dict, None
 
+def check_sorted_snpid(snpid:str):
+    if ":" in snpid:
+        chr, pos, a1, a2 = snpid.split(":")
+        return ':'.join([chr, pos, *list(sorted([a1, a2]))])
+    else:
+        return None
 
 def extract_snp_from_regenie_summary(
     snp_id_list: List[str], regenie_summary_path: Union[str, Path]
@@ -117,6 +123,15 @@ def extract_snp_from_regenie_summary(
                 snp_id = line_dict["ID"]
                 if snp_id in snp_id_list:
                     extracted_snp_list.append(line_dict)
+                else: # check is : sep and sorted?
+                    sorted_snp_id = check_sorted_snpid()
+                    if sorted_snp_id is not None and sorted_snp_id in snp_id_list: # sorted and matched
+                        extracted_snp_list.append(line_dict)
+                        sys.stdout.write(f"Warning: {snp_id} is not sorted, but passed\n with {sorted_snp_id}")
+                        extracted_snp_list.append(line_dict)
+                    else: # even sorted and not match
+                        sys.stdout.write(f"Warning: {snp_id} not passed\n")
+            
             line_idx += 1
     if len(extracted_snp_list) != len(snp_id_list):
         for snp_id in snp_id_list:
@@ -264,12 +279,12 @@ class RegenieConditionalAnalysis:
                 and regenieCond_args["condsnp-list"] is None
             ):
                 sys.stdout.write(
-                    "will use condsnp list by gwas result instead of any prior condsnp list file"
+                    "will use condsnp list by gwas result instead of any prior condsnp list file\n"
                 )
 
             if regenieCond_args["summary"] is not None:
                 sys.stdout.write(
-                    f"will use summary: {regenieCond_args['summary']} and wont run step2 again"
+                    f"will use summary: {regenieCond_args['summary']} and wont run step2 again\n"
                 )
 
             # regenie default setting
