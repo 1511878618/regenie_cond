@@ -381,11 +381,13 @@ class RegenieConditionalAnalysis:
                 # 构建并运行regenie命令
                 current_regenie_args = regenie_default_args.copy()
                 current_regenie_args["out"] = str(current_dir) + "/"
-
+                current_regenie_args["condition-list"] = str(used_cond_snp_list_path)
                 # cond_params pass
+                regenie_engine = Regenie(**current_regenie_args)
+                regenie_engine()  # run
+
 
             # parse results
-
             if iter_count == 0:
                 # the first iteration
                 if (
