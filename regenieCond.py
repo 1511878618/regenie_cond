@@ -624,7 +624,7 @@ def get_parser():
         "--disable-exclude-mode",
         dest="disable-exclude-mode",
         required=False,
-        action="store_false",
+        action="store_true",
         help="disable exclude mode",
     )
     parser.add_argument(
