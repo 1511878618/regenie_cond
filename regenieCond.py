@@ -529,8 +529,11 @@ class RegenieConditionalAnalysis:
                             f.write(line + "\n")
             iter_count += 1
 
+            sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n")
+
+
         # end
-        sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n")
+        sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n") # break will jump to here so let's end there!
         # update final result file
         line_idx = 0
         with open(current_regenie_output_file, "r") as f:
