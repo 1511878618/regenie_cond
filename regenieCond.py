@@ -387,9 +387,9 @@ class RegenieConditionalAnalysis:
 
             # update current_regenie_output_file, file is named as _${pheno}.regenie
             current_regenie_output_file = (
-                current_dir / f"_{current_regenie_args['phenoCol']}.regenie"
+                current_dir / f"_{regenie_default_args['phenoCol']}.regenie"
             )
-            
+
             # parse results
             if iter_count == 0:
                 # the first iteration
