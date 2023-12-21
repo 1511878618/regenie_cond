@@ -22,6 +22,34 @@ flags = ["lowmem", "ref-first", "bt", "qt"]  # TODO: may add all flags
 default_exclude_log10p_cutoff = 1
 
 
+def format_table(input_string):
+    """
+    Formats the input string into a table format. The input string is expected
+    to have tab-separated values for columns and newline-separated values for rows.
+
+    :param input_string: A string representing the table with tab-separated columns and newline-separated rows.
+    :return: A formatted table as a string.
+    """
+
+    # Splitting the string into rows and then into columns
+    rows = [row.split('\t') for row in input_string.strip().split('\n')]
+
+    # Finding the maximum width of each column
+    column_widths = [max(len(str(item)) for item in column) for column in zip(*rows)]
+
+    # Formatting each cell and creating the formatted table
+    formatted_rows = []
+    for row in rows:
+        formatted_row = "|".join(str(item).ljust(width) for item, width in zip(row, column_widths))
+        formatted_rows.append(formatted_row)
+
+    # Joining all rows into a single string
+    formatted_table = '\n'.join(formatted_rows)
+
+    return formatted_table
+
+
+
 def filter_regenie(
     regenie_summary_path: Union[str, Path],
     log10p_cutoff: float = 6,
@@ -467,9 +495,15 @@ class RegenieConditionalAnalysis:
                     f.write(f"{snp_id}\n")
 
             # update leadning snp to stdout
-            for snp_dict in condsnp_list:
-                sys.stdout.write("\t".join(snp_dict.keys()) + "\n")
-                sys.stdout.write("\t".join(snp_dict.values())+ "\n")
+            try:
+                import pandas as pd 
+                sys.stdout.write(pd.DataFrame(condsnp_list).to_string())
+            except:
+
+                sys.stdout.write("\t".join(condsnp_list[0].keys()) + "\n") # write header 
+                for snp_dict in condsnp_list:
+                    sys.stdout.write("\t".join(snp_dict.values())+ "\n")
+
 
             if (
                 cond_args["max-condsnp"] != -1
@@ -504,12 +538,8 @@ class RegenieConditionalAnalysis:
                             snp_dict["FAILDTIME"] = str(iter_count)
                             line = "\t".join(snp_dict.values())
                             f.write(line + "\n")
-
-                sys.stdout.write(f"exclude snp num: {len(exclude_snp_list)}\n")
             iter_count += 1
 
-                
-                    
         # end
         sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n")
         # update final result file
