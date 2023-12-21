@@ -469,7 +469,7 @@ class RegenieConditionalAnalysis:
                     header = "\t".join(list(condsnp_list[0].keys()) + ["FAILDTIME"])
                     f.write(header + "\n")
                 for snp_dict in condsnp_list:
-                    snp_dict["FAILDTIME"] = -1 
+                    snp_dict["FAILDTIME"] = "-1" 
                     line = "\t".join(snp_dict.values())
                     f.write(line + "\n")
 
