@@ -432,6 +432,15 @@ class RegenieConditionalAnalysis:
                     condsnp_list = extract_snp_from_regenie_summary(
                         condsnp_id_list, current_regenie_output_file
                     )
+                    # extract exclude_snp_list
+                    if cond_args["disable-exclude-mode"]: #TODO: may waste time for filter with log10P andFREQ
+                        _, exclude_snp_list = filter_regenie(
+                            current_regenie_output_file,
+                            cond_args["defaultLOG10P"],
+                            cond_args["defaultFREQ"],
+                            exclude_log10p_cutoff=default_exclude_log10p_cutoff ,
+                        )
+
             else:
                 # not the first iteration
                 # extract leading from current_regenie_output_file
