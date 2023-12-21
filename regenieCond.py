@@ -220,7 +220,8 @@ class Regenie:
 
         process.wait()
         if process.returncode != 0:
-            print(f"Error: {stderr.decode('utf-8')}")
+            for info in iter(process.stderr.readline, b""):
+                sys.stderr.write(info.decode("utf-8"))
             exit(1)
 
     def __call__(self) -> Any:
@@ -478,18 +479,21 @@ class RegenieConditionalAnalysis:
                     f.write(line + "\n")
 
             # exclude mode files update 
-            if exclude_snp_list is not None and not cond_args["disable-exclude-mode"]:
+            # if exclude_snp_list is not None and not cond_args["disable-exclude-mode"]:
+            if not cond_args["disable-exclude-mode"]:
                 # update exclude snp list
-                with open(exclude_snp_path, "a") as f:
-                    for snp_dict in exclude_snp_list:
-                        snp_id = snp_dict["ID"]
-                        f.write(f"{snp_id}\n")
+                with open(exclude_snp_path, "a") as f: # create file even if no exclude snp in iter0 
+                    if exclude_snp_list is not None:
+                        for snp_dict in exclude_snp_list:
+                            snp_id = snp_dict["ID"]
+                            f.write(f"{snp_id}\n")
                 # update exclude snp to final result file
-                with open(final_result_path, "a") as f:
-                    for snp_dict in exclude_snp_list:
-                        snp_dict["FAILDTIME"] = str(iter_count)
-                        line = "\t".join(snp_dict.values())
-                        f.write(line + "\n")
+                with open(final_result_path, "a") as f: # create file even if no exclude snp in iter0 
+                    if exclude_snp_list is not None: 
+                        for snp_dict in exclude_snp_list:
+                            snp_dict["FAILDTIME"] = str(iter_count)
+                            line = "\t".join(snp_dict.values())
+                            f.write(line + "\n")
             iter_count += 1
 
                 
