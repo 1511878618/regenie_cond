@@ -373,10 +373,6 @@ class RegenieConditionalAnalysis:
                     regenie_engine = Regenie(**current_regenie_args)
                     regenie_engine()  # run
 
-                    # 处理regenie输出, file is named as _${pheno}.regenie
-                    current_regenie_output_file = (
-                        current_dir / f"_{current_regenie_args['phenoCol']}.regenie"
-                    )
             else:
                 # 构建并运行regenie命令
                 current_regenie_args = regenie_default_args.copy()
@@ -389,6 +385,11 @@ class RegenieConditionalAnalysis:
                 regenie_engine()  # run
 
 
+            # update current_regenie_output_file, file is named as _${pheno}.regenie
+            current_regenie_output_file = (
+                current_dir / f"_{current_regenie_args['phenoCol']}.regenie"
+            )
+            
             # parse results
             if iter_count == 0:
                 # the first iteration
