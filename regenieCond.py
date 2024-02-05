@@ -70,29 +70,20 @@ def filter_regenie(
     )
     passed_num = len(passed_rows)
     sys.stdout.write(f"passed {passed_num} snps\n")
-<<<<<<< HEAD
     passed_snp_dict = (
         [passed_rows[0]] if passed_num >= 1 else []
     )  # besure to return a list[dict]
-=======
-    passed_snp_dict = [passed_rows[0]] if passed_num>=1 else []  # besure to return a list[dict]
->>>>>>> e7267d3 (update regenieCond.py)
     if exclude_log10p_cutoff is not None:
         exclude_num = len(exclude_ids)
         sys.stdout.write(f"exclude {exclude_num} snps\n")
 
-<<<<<<< HEAD
         if exclude_num == 0:
-=======
-        if exclude_num ==0:
->>>>>>> e7267d3 (update regenieCond.py)
             exclude_ids = None
 
         return passed_snp_dict, exclude_ids
     else:
         return passed_snp_dict, None
 
-<<<<<<< HEAD
 
 def check_sorted_snpid(snpid: str):
     if ":" in snpid:
@@ -102,15 +93,6 @@ def check_sorted_snpid(snpid: str):
         return None
 
 
-=======
-def check_sorted_snpid(snpid:str):
-    if ":" in snpid:
-        chr, pos, a1, a2 = snpid.split(":")
-        return ':'.join([chr, pos, *list(sorted([a1, a2]))])
-    else:
-        return None
-
->>>>>>> e7267d3 (update regenieCond.py)
 def extract_snp_from_regenie_summary(
     snp_id_list: List[str], regenie_summary_path: Union[str, Path]
 ) -> List[Dict[str, str]]:
@@ -138,18 +120,12 @@ def extract_snp_from_regenie_summary(
         for line in f:
             if line_idx == 0:
                 header = line.strip().split()
-<<<<<<< HEAD
-
-=======
-                
->>>>>>> e7267d3 (update regenieCond.py)
             else:
                 line = line.strip().split()
                 line_dict = dict(zip(header, line))
                 snp_id = line_dict["ID"]
                 if snp_id in snp_id_list:
                     extracted_snp_list.append(line_dict)
-<<<<<<< HEAD
                 else:  # check is : sep and sorted?
                     sorted_snp_id = check_sorted_snpid(snp_id)
                     if (
@@ -160,15 +136,6 @@ def extract_snp_from_regenie_summary(
                             f"Warning: {snp_id} is not sorted, but passed with {sorted_snp_id}\n"
                         )
 
-=======
-                else: # check is : sep and sorted?
-                    sorted_snp_id = check_sorted_snpid(snp_id)
-                    if sorted_snp_id is not None and sorted_snp_id in snp_id_list: # sorted and matched
-                        extracted_snp_list.append(line_dict)
-                        sys.stdout.write(f"Warning: {snp_id} is not sorted, but passed\n with {sorted_snp_id}")
-                        extracted_snp_list.append(line_dict)
-             
->>>>>>> e7267d3 (update regenieCond.py)
             line_idx += 1
     if len(extracted_snp_list) != len(snp_id_list):
         for snp_id in snp_id_list:
@@ -276,16 +243,11 @@ class Regenie:
 
 class RegenieConditionalAnalysis:
     def __init__(self, args):
-<<<<<<< HEAD
-=======
-
->>>>>>> e7267d3 (update regenieCond.py)
         self.args = args
 
         self.parse_args()
 
     def parse_args(self):
-<<<<<<< HEAD
         """
         解析命令行参数，并设置相关参数。
 
@@ -374,97 +336,6 @@ class RegenieConditionalAnalysis:
         cond_args = self.cond_args
         regenie_default_args = self.regenie_default_args
 
-=======
-            """
-            解析命令行参数，并设置相关参数。
-
-            Args:
-                None
-
-            Returns:
-                None
-            """
-            
-            args_dict = self.args
-            # regenie Cond params parse
-            regenieCond_params = [
-                "summary",
-                "outputFolder",
-                "disable-exclude-mode",
-                "max-condsnp",
-                "condsnp-path",
-                "condsnp-list",
-                "defaultLOG10P",
-                "defaultFREQ",
-            ]
-            print(args_dict)
-            regenieCond_args = {
-                k: args_dict.pop(k) for k in regenieCond_params if k in args_dict.keys()
-            }
-            for k, v in regenieCond_args.items():
-                if v is not None:
-                    sys.stdout.write(f"regenieCond param: --{k} {v}\n")
-
-            if (
-                regenieCond_args["condsnp-path"] is None
-                and regenieCond_args["condsnp-list"] is None
-            ):
-                sys.stdout.write(
-                    "will use condsnp list by gwas result instead of any prior condsnp list file\n"
-                )
-
-            if regenieCond_args["summary"] is not None:
-                sys.stdout.write(
-                    f"will use summary: {regenieCond_args['summary']} and wont run step2 again\n"
-                )
-
-            # regenie default setting
-            if args_dict["covarColList"] is None and args_dict["catCovarList"] is None:
-                # parser.error("At least one covariate is required")
-                args_dict["covarColList"] = [
-                    "genotype_array",
-                    "inferred_sex",
-                    "age_visit",
-                    "PC1",
-                    "PC2",
-                    "PC3",
-                    "PC4",
-                    "PC5",
-                    "PC6",
-                    "PC7",
-                    "PC8",
-                    "PC9",
-                    "PC10",
-                    "assessment_center",
-                    "age_squared",
-                ]
-                args_dict["catCovarList"] = [
-                    "genotype_array",
-                    "inferred_sex",
-                    "assessment_center",
-                ]
-                args_dict["maxCatLevels"] = 30
-                sys.stdout.write(
-                    f"will use default setting for covar, that is: {' '.join(args_dict['covarColList'])}"
-                )
-            # conditional analysis should use specific pheno, so if phenoCol is None, raise warning
-            if args_dict["phenoCol"] is None:
-                sys.stderr.write("Error: phenoCol is None, please specify phenoCol\n")
-                sys.exit(1)
-            elif isinstance(args_dict["phenoCol"], list):
-                args_dict["phenoCol"] = args_dict["phenoCol"][0]
-
-            # set args
-            self.cond_args = regenieCond_args
-            self.regenie_default_args = args_dict
-
-    def perform_conditional_analysis(self):
-        
-        # extract params
-        cond_args = self.cond_args
-        regenie_default_args = self.regenie_default_args
-        
->>>>>>> e7267d3 (update regenieCond.py)
         # mkdir output folder
         output_path = Path(cond_args["outputFolder"])
         if not output_path.exists():
@@ -472,13 +343,8 @@ class RegenieConditionalAnalysis:
             output_path.mkdir(parents=True, exist_ok=True)
 
         # already haved cond snp list
-<<<<<<< HEAD
         # already_haved_cond_snp_list = []
         exclude_snp_list = None  # init var
-=======
-        already_haved_cond_snp_list = []
-        exclude_snp_list = None # init var
->>>>>>> e7267d3 (update regenieCond.py)
         used_cond_snp_list_path = output_path / "used_cond_snp_list.csv"
 
         # exclude_snp_path
@@ -527,13 +393,10 @@ class RegenieConditionalAnalysis:
                 regenie_engine = Regenie(**current_regenie_args)
                 regenie_engine()  # run
 
-<<<<<<< HEAD
                 # 处理regenie输出, file is named as _${pheno}.regenie
                 current_regenie_output_file = (
                     current_dir / f"_{current_regenie_args['phenoCol']}.regenie"
                 )
-=======
->>>>>>> e7267d3 (update regenieCond.py)
 
             # parse results
             if iter_count == 0:
@@ -548,11 +411,7 @@ class RegenieConditionalAnalysis:
                         cond_args["defaultLOG10P"],
                         cond_args["defaultFREQ"],
                         exclude_log10p_cutoff=default_exclude_log10p_cutoff
-<<<<<<< HEAD
                         if not cond_args["disable-exclude-mode"]
-=======
-                        if cond_args["disable-exclude-mode"]
->>>>>>> e7267d3 (update regenieCond.py)
                         else None,
                     )
                 else:
@@ -582,22 +441,14 @@ class RegenieConditionalAnalysis:
                         condsnp_id_list, current_regenie_output_file
                     )
                     # extract exclude_snp_list
-<<<<<<< HEAD
                     if not cond_args[
                         "disable-exclude-mode"
                     ]:  # TODO: may waste time for filter with log10P andFREQ
-=======
-                    if not cond_args["disable-exclude-mode"]: #TODO: may waste time for filter with log10P andFREQ
->>>>>>> e7267d3 (update regenieCond.py)
                         _, exclude_snp_list = filter_regenie(
                             current_regenie_output_file,
                             cond_args["defaultLOG10P"],
                             cond_args["defaultFREQ"],
-<<<<<<< HEAD
                             exclude_log10p_cutoff=default_exclude_log10p_cutoff,
-=======
-                            exclude_log10p_cutoff=default_exclude_log10p_cutoff ,
->>>>>>> e7267d3 (update regenieCond.py)
                         )
 
             else:
@@ -607,7 +458,6 @@ class RegenieConditionalAnalysis:
                     current_regenie_output_file,
                     cond_args["defaultLOG10P"],
                     cond_args["defaultFREQ"],
-<<<<<<< HEAD
                     exclude_log10p_cutoff=default_exclude_log10p_cutoff
                     if not cond_args["disable-exclude-mode"]
                     else None,
@@ -619,19 +469,6 @@ class RegenieConditionalAnalysis:
 
             # update already_haved_cond_snp_list with current condsnp_list
             # already_haved_cond_snp_list.append(condsnp_list)
-=======
-                    exclude_log10p_cutoff=default_exclude_log10p_cutoff if cond_args["disable-exclude-mode"] else None,
-                )
-
-            if len(condsnp_list) == 0:
-                sys.stdout.write(
-                    f"no snp passed log10p and freq cutoff, will stop\n"
-                )
-                break
-
-            # update already_haved_cond_snp_list with current condsnp_list
-            already_haved_cond_snp_list.append(condsnp_list)
->>>>>>> e7267d3 (update regenieCond.py)
 
             # save condsnp_list to file, appendix mode
             with open(used_cond_snp_list_path, "a") as f:
@@ -640,7 +477,6 @@ class RegenieConditionalAnalysis:
                     f.write(f"{snp_id}\n")
 
             # update leadning snp to stdout
-<<<<<<< HEAD
             try:
                 import pandas as pd
 
@@ -651,11 +487,6 @@ class RegenieConditionalAnalysis:
                 )  # write header
                 for snp_dict in condsnp_list:
                     sys.stdout.write("\t".join(snp_dict.values()) + "\n")
-=======
-            for snp_dict in condsnp_list:
-                sys.stdout.write("\t".join(snp_dict.keys()) + "\n")
-                sys.stdout.write("\t".join(snp_dict.values())+ "\n")
->>>>>>> e7267d3 (update regenieCond.py)
 
             if (
                 cond_args["max-condsnp"] != -1
@@ -670,7 +501,6 @@ class RegenieConditionalAnalysis:
                     header = "\t".join(list(condsnp_list[0].keys()) + ["FAILDTIME"])
                     f.write(header + "\n")
                 for snp_dict in condsnp_list:
-<<<<<<< HEAD
                     snp_dict["FAILDTIME"] = "-1"
                     line = "\t".join(snp_dict.values())
                     f.write(line + "\n")
@@ -682,36 +512,19 @@ class RegenieConditionalAnalysis:
                 with open(
                     exclude_snp_path, "a"
                 ) as f:  # create file even if no exclude snp in iter0
-=======
-                    snp_dict["FAILDTIME"] = "-1" 
-                    line = "\t".join(snp_dict.values())
-                    f.write(line + "\n")
-
-            # exclude mode files update 
-            # if exclude_snp_list is not None and not cond_args["disable-exclude-mode"]:
-            if not cond_args["disable-exclude-mode"]:
-                # update exclude snp list
-                with open(exclude_snp_path, "a") as f: # create file even if no exclude snp in iter0 
->>>>>>> e7267d3 (update regenieCond.py)
                     if exclude_snp_list is not None:
                         for snp_dict in exclude_snp_list:
                             snp_id = snp_dict["ID"]
                             f.write(f"{snp_id}\n")
                 # update exclude snp to final result file
-<<<<<<< HEAD
                 with open(
                     final_result_path, "a"
                 ) as f:  # create file even if no exclude snp in iter0
                     if exclude_snp_list is not None:
-=======
-                with open(final_result_path, "a") as f: # create file even if no exclude snp in iter0 
-                    if exclude_snp_list is not None: 
->>>>>>> e7267d3 (update regenieCond.py)
                         for snp_dict in exclude_snp_list:
                             snp_dict["FAILDTIME"] = str(iter_count)
                             line = "\t".join(snp_dict.values())
                             f.write(line + "\n")
-<<<<<<< HEAD
             iter_count += 1
 
             sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n")
@@ -719,27 +532,13 @@ class RegenieConditionalAnalysis:
 
         # end
         sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n") # break will jump to here so let's end there!
-=======
-
-                sys.stdout.write(f"exclude snp num: {len(exclude_snp_list)}\n")
-            iter_count += 1
-
-                
-                    
-        # end
-        sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n")
->>>>>>> e7267d3 (update regenieCond.py)
         # update final result file
         line_idx = 0
         with open(current_regenie_output_file, "r") as f:
             for line in f:
-<<<<<<< HEAD
                 if (
                     line_idx == 0 and iter_count == 0
                 ):  # only when the first iteration is breaked
-=======
-                if line_idx == 0 and iter_count == 0: # only when the first iteration is breaked 
->>>>>>> e7267d3 (update regenieCond.py)
                     header = "\t".join(line.strip().split() + ["FAILDTIME"])
                     to_write = header
                 else:
@@ -749,14 +548,8 @@ class RegenieConditionalAnalysis:
                     h.write(to_write + "\n")
                 line_idx += 1
 
-<<<<<<< HEAD
         sys.stdout.write(f"result path: {str(final_result_path)}\n")
 
-=======
-                
-
-        sys.stdout.write(f"result path: {str(final_result_path)}\n")
->>>>>>> e7267d3 (update regenieCond.py)
 
 def get_parser():
     parser = argparse.ArgumentParser(description="Conditional Analysis By regenie")
