@@ -66,7 +66,7 @@ class DataFramePretty(object):
 flags = ["lowmem", "ref-first", "bt", "qt"]  # TODO: may add all flags
 default_exclude_log10p_cutoff = 1
 
-
+RegenieHeader= ["CHROM","GENPOS","ID","ALLELE0","ALLELE1","A1FREQ","N", "TEST", "BETA" ,"SE", "CHISQ", "LOG10P", "EXTRA"]
 def filter_regenie(
     regenie_summary_path: Union[str, Path],
     log10p_cutoff: float = 6,
@@ -397,6 +397,10 @@ class RegenieConditionalAnalysis:
         # final result file
         final_result_path = output_path / "final_result.regenieCond"
 
+        with open(final_result_path, "a") as f:
+            header = "\t".join(list(RegenieHeader) + ["FAILDTIME"])
+            f.write(header + "\n")
+
         iter_count = 0
         while True:
             print(f"-------------BEGIN OF epoch: {iter_count} -------------")
@@ -544,9 +548,9 @@ class RegenieConditionalAnalysis:
 
             # update leading into final result file
             with open(final_result_path, "a") as f:
-                if iter_count == 0:
-                    header = "\t".join(list(condsnp_list[0].keys()) + ["FAILDTIME"])
-                    f.write(header + "\n")
+                # if iter_count == 0:
+                #     header = "\t".join(list(condsnp_list[0].keys()) + ["FAILDTIME"])
+                #     f.write(header + "\n")
                 for snp_dict in condsnp_list:
                     snp_dict["FAILDTIME"] = "-1"
                     line = "\t".join(snp_dict.values())
@@ -584,13 +588,15 @@ class RegenieConditionalAnalysis:
         line_idx = 0
         with open(current_regenie_output_file, "r") as f:
             for line in f:
-                if (
-                    line_idx == 0 and iter_count == 0
-                ):  # only when the first iteration is breaked
-                    header = "\t".join(line.strip().split() + ["FAILDTIME"])
-                    to_write = header
-                elif line_idx == 0 and iter_count > 0:
-                    continue # skip header
+                # if (
+                #     line_idx == 0 and iter_count == 0
+                # ):  # only when the first iteration is breaked
+                #     header = "\t".join(line.strip().split() + ["FAILDTIME"])
+                #     to_write = header
+                # elif line_idx == 0 and iter_count > 0:
+                #     continue # skip header
+                if line_idx == 0:
+                    continue 
                 else:
                     line = line.strip().split() + [str(iter_count)]
                     to_write = "\t".join(line)
