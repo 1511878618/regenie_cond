@@ -589,6 +589,8 @@ class RegenieConditionalAnalysis:
                 ):  # only when the first iteration is breaked
                     header = "\t".join(line.strip().split() + ["FAILDTIME"])
                     to_write = header
+                elif line_idx == 0 and iter_count > 0:
+                    continue # skip header
                 else:
                     line = line.strip().split() + [str(iter_count)]
                     to_write = "\t".join(line)
