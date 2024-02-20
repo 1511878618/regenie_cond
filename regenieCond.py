@@ -17,6 +17,51 @@ from typing import Union, List, Dict, Any, Tuple
 import textwrap
 
 import sys
+try:
+    from rich.console import Console
+    from rich.table import Table
+except:
+    print("缺少rich模块,开始安装...")
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "rich"], check=True)
+        print("successfully installed rich")
+        from rich.console import Console
+        from rich.table import Table
+    except subprocess.CalledProcessError:
+        print("unable to install rich, please install it manually")
+        sys.exit(1)
+try:
+    import pandas as pd
+except ImportError:
+    try:
+        subprocess.run([sys.executable, "-m", "pip", "install", "pandas"], check=True)
+        print("successfully installed pandas")
+        import pandas as pd
+    except subprocess.CalledProcessError:
+        print("unable to install pandas, please install it manually")
+        sys.exit(1)
+
+class DataFramePretty(object):
+    def __init__(self, df: pd.DataFrame) -> None:
+        self.data = df
+
+    def show(self):
+        table = Table()
+
+        # self.data是原始数据
+        # df 是用来显示的数据
+        df = self.data.copy()
+        for col in df.columns:
+            df[col] = df[col].astype("str")
+            table.add_column(col)
+
+        for idx in range(len(df)):
+            table.add_row(*df.iloc[idx].tolist())
+
+        console = Console()
+        console.print(table)
+
+
 
 flags = ["lowmem", "ref-first", "bt", "qt"]  # TODO: may add all flags
 default_exclude_log10p_cutoff = 1
@@ -481,9 +526,8 @@ class RegenieConditionalAnalysis:
 
             # update leadning snp to stdout
             try:
-                import pandas as pd
-
-                sys.stdout.write(pd.DataFrame(condsnp_list).to_string() + "\n")
+                # sys.stdout.write(pd.DataFrame(condsnp_list).to_string() + "\n")
+                DataFramePretty(pd.DataFrame(condsnp_list)).show()
             except:
                 sys.stdout.write(
                     "\t".join(condsnp_list[0].keys()) + "\n"
@@ -519,15 +563,16 @@ class RegenieConditionalAnalysis:
                         for snp_dict in exclude_snp_list:
                             snp_id = snp_dict["ID"]
                             f.write(f"{snp_id}\n")
-                # update exclude snp to final result file
-                with open(
-                    final_result_path, "a"
-                ) as f:  # create file even if no exclude snp in iter0
-                    if exclude_snp_list is not None:
-                        for snp_dict in exclude_snp_list:
-                            snp_dict["FAILDTIME"] = str(iter_count)
-                            line = "\t".join(snp_dict.values())
-                            f.write(line + "\n")
+                # 20240220 No need to write excluded snp to final result file
+                # # update exclude snp to final result file
+                # with open(
+                #     final_result_path, "a"
+                # ) as f:  # create file even if no exclude snp in iter0
+                #     if exclude_snp_list is not None:
+                #         for snp_dict in exclude_snp_list:
+                #             snp_dict["FAILDTIME"] = str(iter_count)
+                #             line = "\t".join(snp_dict.values())
+                #             f.write(line + "\n")
             iter_count += 1
 
             sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n")
@@ -577,6 +622,9 @@ def get_parser():
 
         if no --condsnp-path and --condsnp-list, will use gwas result as condsnp list, and will use default setting or add this
 
+        Output Explained:
+        1. FIALID TIME: -1 means leading snp; 0 means first conditional snp; 1 means second conditional snp; ...
+        2. exclude
 
         """
         ),
