@@ -57,7 +57,7 @@ def filter_regenie(
                 log10p = float(line_dict["LOG10P"])
                 freq = float(line_dict["A1FREQ"])
 
-                if log10p > log10p_cutoff and freq <= freq_cutoff:
+                if log10p > log10p_cutoff and freq >= freq_cutoff:
                     passed_rows.append(line_dict)
                 if exclude_log10p_cutoff is not None:
                     if log10p <= exclude_log10p_cutoff:
@@ -370,6 +370,9 @@ class RegenieConditionalAnalysis:
                             f"Error: {current_regenie_output_file} not exists"
                         )
                         sys.exit(1)
+
+                    
+                        
                 else:
                     # 构建并运行regenie命令
                     current_regenie_args = regenie_default_args.copy()
