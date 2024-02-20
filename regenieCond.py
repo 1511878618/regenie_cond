@@ -596,6 +596,7 @@ class RegenieConditionalAnalysis:
                 # elif line_idx == 0 and iter_count > 0:
                 #     continue # skip header
                 if line_idx == 0:
+                    line_idx += 1
                     continue 
                 else:
                     line = line.strip().split() + [str(iter_count)]
