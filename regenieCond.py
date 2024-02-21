@@ -567,16 +567,16 @@ class RegenieConditionalAnalysis:
                         for snp_dict in exclude_snp_list:
                             snp_id = snp_dict["ID"]
                             f.write(f"{snp_id}\n")
-                # 20240220 No need to write excluded snp to final result file
-                # # update exclude snp to final result file
-                # with open(
-                #     final_result_path, "a"
-                # ) as f:  # create file even if no exclude snp in iter0
-                #     if exclude_snp_list is not None:
-                #         for snp_dict in exclude_snp_list:
-                #             snp_dict["FAILDTIME"] = str(iter_count)
-                #             line = "\t".join(snp_dict.values())
-                #             f.write(line + "\n")
+
+                # update exclude snp to final result file
+                with open(
+                    final_result_path, "a"
+                ) as f:  # create file even if no exclude snp in iter0
+                    if exclude_snp_list is not None:
+                        for snp_dict in exclude_snp_list:
+                            snp_dict["FAILDTIME"] = str(iter_count)
+                            line = "\t".join(snp_dict.values())
+                            f.write(line + "\n")
             iter_count += 1
 
             sys.stdout.write(f"-------------END OF epoch: {iter_count} -------------\n")
