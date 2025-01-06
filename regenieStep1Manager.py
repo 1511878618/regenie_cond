@@ -103,6 +103,9 @@ class RegenieStep1:
                     )
                     new_step1_df.loc[idx, "status"] = 0
                     new_step1_df.loc[idx, "local_path"] = None
+            else:
+                new_step1_df.loc[idx, "local_path"] = Path(row["path"]).resolve()
+                new_step1_df.loc[idx, "status"] = 1
         self.step1_df = new_step1_df
 
     def fix(self):
