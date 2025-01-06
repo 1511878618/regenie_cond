@@ -149,6 +149,25 @@ class RegenieStep1:
                 new_step1_df.loc[idx, "local_path"] = new_path
         print("All loco files copied to the new folder")
 
+    def save(self, new_step1_dir, cp=False):
+        # save the step1 file to new dir
+
+        # check basic file
+        new_step1_dir = Path(new_step1_dir)
+        if new_step1_dir.exists():
+            raise ValueError(f"{new_step1_dir} already exists")
+        new_step1_dir.parent.mkdir(parents=True, exist_ok=True)
+
+        # save the step1 file
+        self.step1_df[["phenotype", "local_path"]].to_csv(
+            new_step1_dir, sep=" ", index=False, header=False
+        )
+
+        # copy all loco files to the new folder
+        if cp:
+            parent_dir = new_step1_dir.parent
+            self.cp(parent_dir)
+
 
 def concatRegeineStep1(to_merge_list, force=False):
     """
@@ -205,7 +224,7 @@ def concatRegeineStep1(to_merge_list, force=False):
                 + "_"
                 + merged_step1_df["phenotype"]
             )
-            DataFramePretty(merged_step1_df.sort_values(by="old_phenotype")).show()
+            # DataFramePretty(merged_step1_df.sort_values(by="old_phenotype")).show()
 
     # return new step1 object
     merged_RegeineStep1 = RegenieStep1(step1_df=merged_step1_df)
@@ -270,11 +289,14 @@ if __name__ == "__main__":
     # For Pretrain dict
     input_folders = args.input
 
-    step1s = [RegenieStep1(stepFolder) for stepFolder in input_folders]
+    step1s = [RegenieStep1(step1_list_dir=stepFolder) for stepFolder in input_folders]
 
     for step1 in step1s:
         if args.fix:
             step1.fix()
+
+            # update
+            step1.save(step1.step1_list_dir, cp=False)
 
         if args.list:
             DataFramePretty(step1.step1_df).show()
@@ -282,23 +304,14 @@ if __name__ == "__main__":
     if args.merge:
         sys.stdout.write("Will merge all step1 folders\n")
         sys.stdout.write("-" * 20 + "\n")
-        merged_RegeineStep1 = concatRegeineStep1(step1s, args.force)
+        main_object = concatRegeineStep1(step1s, args.force)
 
-        if args.output is not None:
-            merged_RegeineStep1.step1_df.to_csv(
-                args.output, sep=" ", index=False, header=False
-            )
+        if args.list:
+            DataFramePretty(main_object.step1_df).show()
 
-        if args.cp:
-            output_parent = Path(args.output).parent
-            sys.stdout.write(f"Copying all loco files to {output_parent}\n")
-            merged_RegeineStep1.cp(output_parent)
-    elif len(step1s) == 1:  # only one step1 folder will use
+    elif len(step1s) == 1 and args.output is not None:
         sys.stdout.write("Only one step1 folder found\n")
-        if args.output is not None:
-            sys.stderr.write("this step1 file will save to {args.output}\n")
-            step1s[0].step1_df.to_csv(args.output, sep=" ", index=False, header=False)
-        if args.cp:
-            output_parent = Path(args.output).parent
-            sys.stdout.write(f"Copying all loco files to {output_parent}\n")
-            step1s[0].cp(args.output)
+        main_object = step1s[0]
+
+    if args.output is not None:
+        main_object.save(args.output, cp=args.cp)
