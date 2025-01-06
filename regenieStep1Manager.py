@@ -65,7 +65,7 @@ class DataFramePretty(object):
 
 class RegenieStep1:
 
-    def __init__(self, step1_list_dir, step1_df=None) -> None:
+    def __init__(self, step1_list_dir=None, step1_df=None) -> None:
         """
         Assume the loco file is in the same folder with the pred.list file or  path in the pred.list file is correct
 
@@ -77,11 +77,13 @@ class RegenieStep1:
         """
         if step1_df is not None:
             self.step1_df = step1_df
-        else:
+        elif step1_list_dir is not None:
             self.step1_list_dir = step1_list_dir
             self.step1_df = pd.read_csv(
                 self.step1_list_dir, sep="\s+", header=None, names=["phenotype", "path"]
             )
+        else:
+            raise ValueError("step1_list_dir or step1_df should be provided")
 
         self._build()  # build the step1 manager
 
