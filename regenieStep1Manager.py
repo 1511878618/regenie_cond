@@ -152,19 +152,22 @@ def concatRegeineStep1(to_merge_list, force=False):
         [isinstance(x, RegenieStep1) for x in to_merge_list]
     ), "all to merge list should be RegenieStep1 object"
 
-    for each_step1 in to_merge_list:
-        # check status col in the step1_df
-        if "status" not in each_step1.step1_df.columns:
-            sys.stderr.write(
-                "status col not found in the step1_df, please run fix first\n"
-            )
-            exit(1)
+    # for each_step1 in to_merge_list:
+    #     # check status col in the step1_df
+    #     if "status" not in each_step1.step1_df.columns:
+    #         sys.stderr.write(
+    #             "status col not found in the step1_df, please run fix first\n"
+    #         )
+    #         exit(1)
 
-        if each_step1.step1_df.query("status == 0").shape[0] > 0:
-            sys.stderr.write(
-                "status not ok found in the step1_df, please run fix first\n"
-            )
-            exit(1)
+    #     if each_step1.step1_df.query("status == 0").shape[0] > 0:
+    #         sys.stderr.write(
+    #             "status not ok found in the step1_df, please run fix first\n"
+    #         )
+    #         exit(1)
+
+    for each_step1 in to_merge_list:
+        each_step1.fix()
 
     # merge the pred.list files
     merged_step1_df = pd.concat([each_step1.step1_df for each_step1 in to_merge_list])
@@ -243,7 +246,7 @@ def getParser():
         action="store_true",
     )
     parser.add_argument('-m', '--merge', help='merge all pred.list files', action='store_true')
-    parser.add_argument('-o', '--output', type=str, help='output folder', default='new_step1')
+    parser.add_argument("-o", "--output", type=str, help="output folder", default=None)
     parser.add_argument('--force', help='force merge the pred.list files', action='store_true')
     parser.add_argument('--update', help='update the pred.list files, only use with one input and update step1 file structure with new dir', action='store_true')
     parser.add_argument(
@@ -264,18 +267,28 @@ if __name__ == "__main__":
     for step1 in step1s:
         if args.fix:
             step1.fix()
+
         if args.list:
             DataFramePretty(step1.step1_df).show()
 
     if args.merge:
         merged_RegeineStep1 = concatRegeineStep1(step1s, args.force)
 
-    if args.output is not None:
-        merged_RegeineStep1.step1_df.to_csv(
-            args.output, sep=" ", index=False, header=False
-        )
+        if args.output is not None:
+            merged_RegeineStep1.step1_df.to_csv(
+                args.output, sep=" ", index=False, header=False
+            )
 
-    if args.cp:
-        output_parent = Path(args.output).parent
-        sys.stdout.write(f"Copying all loco files to {output_parent}\n")
-        merged_RegeineStep1.cp(output_parent)
+        if args.cp:
+            output_parent = Path(args.output).parent
+            sys.stdout.write(f"Copying all loco files to {output_parent}\n")
+            merged_RegeineStep1.cp(output_parent)
+    elif len(step1s) == 1:  # only one step1 folder will use
+        sys.stdout.write("Only one step1 folder found\n")
+        if args.output is not None:
+            sys.stderr.write("this step1 file will save to {args.output}\n")
+            step1s[0].step1_df.to_csv(args.output, sep=" ", index=False, header=False)
+        if args.cp:
+            output_parent = Path(args.output).parent
+            sys.stdout.write(f"Copying all loco files to {output_parent}\n")
+            step1s[0].cp(args.output)
