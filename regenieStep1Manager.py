@@ -149,12 +149,12 @@ class RegenieStep1:
                 new_step1_df.loc[idx, "local_path"] = new_path
         print("All loco files copied to the new folder")
 
-    def save(self, new_step1_dir, cp=False):
+    def save(self, new_step1_dir, cp=False, replace=False):
         # save the step1 file to new dir
 
         # check basic file
         new_step1_dir = Path(new_step1_dir)
-        if new_step1_dir.exists():
+        if new_step1_dir.exists() and not replace:
             raise ValueError(f"{new_step1_dir} already exists")
         new_step1_dir.parent.mkdir(parents=True, exist_ok=True)
 
@@ -296,7 +296,8 @@ if __name__ == "__main__":
             step1.fix()
 
             # update
-            step1.save(step1.step1_list_dir, cp=False)
+            if args.update:
+                step1.save(step1.step1_list_dir, cp=False, replace=True)
 
         if args.list:
             DataFramePretty(step1.step1_df).show()
