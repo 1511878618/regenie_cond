@@ -119,7 +119,7 @@ class RegenieStep1:
         """
         # only keep the status == 1
 
-        DataFramePretty(self.step1_df).show()
+        # DataFramePretty(self.step1_df).show()
         status_ok = self.step1_df.query("status == 1").shape[0]
         status_not_ok = self.step1_df.query("status == 0").shape[0]
         sys.stdout.write(f"status ok: {status_ok}, status not ok: {status_not_ok}\n")
