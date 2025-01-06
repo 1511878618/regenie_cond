@@ -126,9 +126,9 @@ class RegenieStep1:
         sys.stdout.write("Will fix the path in the pred.list file\n")
         self.step1_df = self.step1_df.query("status == 1")
         # save
-        self.step1_df[["phenotype", "local_path"]].to_csv(
-            self.step1_list_dir, sep=" ", index=False, header=False
-        )
+        # self.step1_df[["phenotype", "local_path"]].to_csv(
+        #     self.step1_list_dir, sep=" ", index=False, header=False
+        # )
         # reload
         self._build()
 
