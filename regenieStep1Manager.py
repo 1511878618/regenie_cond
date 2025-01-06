@@ -278,6 +278,8 @@ if __name__ == "__main__":
             DataFramePretty(step1.step1_df).show()
 
     if args.merge:
+        sys.stdout.write("Will merge all step1 folders\n")
+        sys.stdout.write("-" * 20 + "\n")
         merged_RegeineStep1 = concatRegeineStep1(step1s, args.force)
 
         if args.output is not None:
