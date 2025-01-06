@@ -247,20 +247,18 @@ def getParser():
             %prog -i step1_1.list step1_2.list -l
 
             # fix the path in pred.list file; find the matched loco file in the step1.list same folder 
-            %prog -i step1_1.list step1_2.list --fix 
+            %prog -i step1_1.list step1_2.list --fix
+
+            ## add --update will update the step1 file inplace 
+            %prog -i step1_1.list step1_2.list --fix --update
 
             # merge the pred.list files in different step1 folders; Note: if any of them are same name, will raise errors, use --force to force merge them with suffix; or save each at separate folder
             %prog -i step1_1.list step1_2.list -m -o new_step1.list
 
             # if you want to merge and cp all loco file to new step1.list folder 
             %prog -i step1_1.list step1_2.list -m -o new_step1.list --cp
-            
-            # same --update option to update the other to the first one
-            %prog -i step1_1.list step1_2.list --update 
 
-            # --cp will cp all loco files to the new folder
-            %prog -i step1_1.list step1_2.list --update --cp
-                
+
             """
         ),
     )
