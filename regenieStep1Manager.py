@@ -63,75 +63,144 @@ class DataFramePretty(object):
         console.print(table)
 
 
-
 class RegenieStep1:
-    def __init__(self, stepFolder=None, pred_df=None) -> None:
-        self.dir = stepFolder
-        if pred_df is not None:
-            self.pred_df = pred_df
-        else:
-            self._build() # build the step1 manager
+
+    def __init__(self, step1_list_dir) -> None:
+        """
+        Assume the loco file is in the same folder with the pred.list file or  path in the pred.list file is correct
+
+        When init will auto check the loco file path record in the pred.list file, if file not exists, will warning and  try to find the matched loco file in the same folder, and if still not found, will raise error
+
+        So if founded, then run fix will update
+
+
+        """
+        self.step1_list_dir = step1_list_dir
+        self.step1_df = pd.read_csv(
+            self.step1_list_dir, sep="\s+", header=None, names=["phenotype", "path"]
+        )
+
+        self._build()  # build the step1 manager
 
     def _build(self):
-        self.locos = list(Path(self.dir).glob("*.loco"))
-        self.pred_list = list(Path(self.dir).glob("*pred.list"))
-        if len(self.pred_list) == 0:
-            raise ValueError(f"No pred list file found in {self.dir}")
-        elif len(self.pred_list) > 1:
-            # raise ValueError(f"More than one pred list file found in {self.dir}, please use --merge option to merge them")
-            sys.stdout.write(f'More than one pred list file found in {self.dir}, will merge them\n')
 
-        pred_df = pd.concat([pd.read_csv(pred, sep="\s+", header=None, names=['phenotype', 'path']) for pred in self.pred_list])
+        # check the loco file path record in the pred.list file
 
-        for idx, row in pred_df.iterrows():
+        new_step1_df = self.step1_df.copy()
+        for idx, row in self.step1_df.iterrows():
+            # check the path exists
             if not Path(row['path']).exists():
-                sys.stdout.write(f"{row['path']} not exists, will try to find it in local loco files to match the phenotype\n")
-                wrong_path = row['path']
-                wrong_base_name = Path(wrong_path).name
-                matched_loco = [str(loco.resolve()) for loco in self.locos if wrong_base_name in loco.name]
-                if len(matched_loco) == 1:
-                    pred_df.loc[idx, 'path'] = matched_loco[0]
-                    pred_df.loc[idx, 'old_path'] = wrong_path
+                sys.stdout.write(
+                    f"{row['phenotype']} loco file {row['path']} not exists, will try to find it in local loco files to match the phenotype\n"
+                )
+                new_path = self.step1_list_dir.parent / f"{row['phenotype']}.loco"
+                if new_path.exists():
+                    new_step1_df.loc[idx, "local_path"] = new_path.resolve()
+                    new_step1_df.loc[idx, "status"] = 1
                 else:
-                    raise ValueError(f"Can not find the matched loco file for {wrong_path} with {matched_loco}")
-        
+                    sys.stderr.write(
+                        f"Can not find the matched loco file for {row['phenotype']} \n"
+                    )
+                    new_step1_df.loc[idx, "status"] = 0
+                    new_step1_df.loc[idx, "local_path"] = None
+        self.step1_df = new_step1_df
 
-        self.pred_df = pred_df
-
-    def move(self, outDir):
+    def fix(self):
         """
-        may copy is more correct to describe the opreate
+        fix the path in the pred.list file; find the matched loco file in the step1.list same folder
         """
-        outDir = Path(outDir)
-        outDir.mkdir(parents=True, exist_ok=True)
+        # only keep the status == 1
 
-        # mv 
-        new_pred_df_list = []
-        for idx, row in self.pred_df.iterrows():
-            pheno = row['phenotype']
-            path = row['path']
-            new_path = outDir / f"{pheno}.loco"
+        DataFramePretty(self.step1_df).show()
+        status_ok = self.step1_df.query("status == 1").shape[0]
+        status_not_ok = self.step1_df.query("status == 0").shape[0]
+        sys.stdout.write(f"status ok: {status_ok}, status not ok: {status_not_ok}\n")
+        sys.stdout.write("Will fix the path in the pred.list file\n")
+        self.step1_df = self.step1_df.query("status == 1")
+        # save
+        self.step1_df[["phenotype", "local_path"]].to_csv(
+            self.step1_list_dir, sep=" ", index=False, header=False
+        )
+        # reload
+        self._build()
+
+    def cp(self, tgt_dir):
+        # copy all loco files to the new folder
+        tgt_dir = Path(tgt_dir)
+        if not tgt_dir.exists():
+            tgt_dir.mkdir(parents=True, exist_ok=True)
+        new_step1_df = self.step1_df.copy()
+        for idx, row in self.step1_df.iterrows():
+            # new path
+            new_path = tgt_dir / row["phenotype"]
+
             if new_path.exists():
                 raise ValueError(f"{new_path} already exists")
             else:
-                # Path(path).rename(new_path)
-                shutil.copyfile(path, new_path)
-                new_pred_df_list.append({'phenotype': pheno, 'path': new_path.resolve()})
-        # save new pred_df  
-        self.pred_df = pd.DataFrame(new_pred_df_list)
-        self.dir = outDir
-        new_pred_path = Path(self.dir) / "pred.list"
-        self.pred_df[['phenotype', 'path']].to_csv(new_pred_path, sep=" ", index=False, header=False)
+                shutil.copyfile(row["local_path"], new_path)
+                new_step1_df.loc[idx, "local_path"] = new_path
+        print("All loco files copied to the new folder")
 
 
-    def save(self):
-        new_pred_path = Path(self.dir) / "pred.list"
-        for old_pred in self.pred_list:
-            old_pred.rename(str(old_pred) + '.old')
-        self.pred_list = [new_pred_path]
-        self.pred_df[['phenotype', 'path']].to_csv(new_pred_path, sep=" ", index=False, header=False)
+def concatRegeineStep1(to_merge_list, force=False):
+    """
+    concat RegenieStep1 object
 
+    """
+    # TODO: merge the other list to the first one by only concat and keep local_path is ok
+    assert all(
+        [isinstance(x, RegenieStep1) for x in to_merge_list]
+    ), "all to merge list should be RegenieStep1 object"
 
+    for each_step1 in to_merge_list:
+        # check status col in the step1_df
+        if "status" not in each_step1.step1_df.columns:
+            sys.stderr.write(
+                "status col not found in the step1_df, please run fix first\n"
+            )
+            exit(1)
+
+        if each_step1.step1_df.query("status == 0").shape[0] > 0:
+            sys.stderr.write(
+                "status not ok found in the step1_df, please run fix first\n"
+            )
+            exit(1)
+
+    # merge the pred.list files
+    merged_step1_df = pd.concat([each_step1.step1_df for each_step1 in to_merge_list])
+
+    # check any duplicated phenotype
+    duplicated = merged_step1_df.duplicated(subset=["phenotype"])
+    is_duplicated = duplicated.any()
+
+    if is_duplicated:
+        sys.stdout.write(
+            f"Found {duplicated.sum()} duplicated loco files with duplicated name\n"
+        )
+        duplicated_df = merged_step1_df[duplicated]
+        DataFramePretty(duplicated_df).show()
+
+        if not force:
+            sys.stderr.write(
+                "Duplicated phenotype found, can not merge them, please check the pred.list files in each step1 folder or use --force option to force merge them\n"
+            )
+            exit(1)
+        else:
+            # rename the duplicated phenotype with suffix
+            sys.stdout.write("Force merge them with --force passed\n")
+            merged_step1_df["old_phenotype"] = merged_step1_df["phenotype"]
+            merged_step1_df["phenotype"] = (
+                merged_step1_df["path"].apply(lambda x: Path(x).parent.name)
+                + "_"
+                + merged_step1_df["phenotype"]
+            )
+            DataFramePretty(merged_step1_df.sort_values(by="old_phenotype")).show()
+
+    # return new step1 object
+    merged_RegeineStep1 = RegenieStep1(pred_df=merged_step1_df)
+    # fix
+    merged_RegeineStep1.fix()
+    return merged_RegeineStep1
 
 
 def getParser():
@@ -142,38 +211,39 @@ def getParser():
             %prog is ...
             @Author: xutingfeng@big.ac.cn
             Version: 1.0
-            supported usage:
-            1. list the step1 file structure; note you can use -i step1_1 step1_2 to list multiple step1 file structure; if the path is not correct, there will use path and old path to mark them (if these file indeed exists)
-                %prog -i step1_1 -l
-            2. If you found the path is not correct in xx_pred.list file and -l can help you match the real path, then use --update to update the pred.list file 
-                %prog -i step1 --udpate
-                
-                also you can use -o to specify the output folder instead of update at the original folder
 
-                %prog -i step1 -o new_step1
 
-            3. This can work with multiple step1 folders, if you only want to update them each other
-                % prog -i step1_1 step1_2 -l # show 
-                or 
-                % prog -i step1_1 step1_2 --update # update 
-            4. You can merge the pred.list files in different step1 folders, but first use -l to list final merged 
-                %prog -i step1_1 step1_2 -m -l 
-            5. If there are some duplicates in the merged pred.list file, you can use --force to force merge them, but with --force, the old phenotype will be added to the new phenotype as suffix; -l will show the final merged pred.list file
-                %prog -i step1_1 step1_2 -m --force -l
-            6. without -l option, the final merged pred.list file will be moved to new_step1 folder (can be changed by -o option)
-                %prog -i step1_1 step1_2 -m --force -o new_step1
+            # list step1 
+            %prog -i step1_1.list step1_2.list -l
 
+            # fix the path in pred.list file; find the matched loco file in the step1.list same folder 
+            %prog -i step1_1.list step1_2.list --fix 
+
+            # merge the pred.list files in different step1 folders; Note: if any of them are same name, will raise errors, use --force to force merge them with suffix; or save each at separate folder
+            %prog -i step1_1.list step1_2.list -m -o new_step1.list
+
+            # if you want to merge and cp all loco file to new step1.list folder 
+            %prog -i step1_1.list step1_2.list -m -o new_step1.list --cp
+            
+            # same --update option to update the other to the first one
+            %prog -i step1_1.list step1_2.list --update 
+
+            # --cp will cp all loco files to the new folder
+            %prog -i step1_1.list step1_2.list --update --cp
                 
             """
         ),
     )
+
     parser.add_argument('-i', '--input', default=['step1'], help='input folder of step1, -i step1_1 step1_2', nargs='+')
     parser.add_argument('-l', '--list', help='list all phenotypes', action='store_true')
     parser.add_argument('-m', '--merge', help='merge all pred.list files', action='store_true')
     parser.add_argument('-o', '--output', type=str, help='output folder', default='new_step1')
     parser.add_argument('--force', help='force merge the pred.list files', action='store_true')
     parser.add_argument('--update', help='update the pred.list files, only use with one input and update step1 file structure with new dir', action='store_true')
-
+    parser.add_argument(
+        "--cp", help="copy all loco files to the new folder", action="store_true"
+    )
 
     return parser
 
@@ -183,8 +253,27 @@ if __name__ == "__main__":
     args = parser.parse_args()
     # For Pretrain dict
     input_folders = args.input
+
     step1s = [RegenieStep1(stepFolder) for stepFolder in input_folders]
 
+    for step1 in step1s:
+        if args.fix:
+            step1.fix()
+        if args.list:
+            DataFramePretty(step1.step1_df).show()
+
+    if args.merge:
+        merged_RegeineStep1 = concatRegeineStep1(step1s, args.force)
+
+    if args.output is not None:
+        merged_RegeineStep1.step1_df.to_csv(
+            args.output, sep=" ", index=False, header=False
+        )
+
+    if args.cp:
+        output_parent = Path(args.output).parent
+        sys.stdout.write(f"Copying all loco files to {output_parent}\n")
+        merged_RegeineStep1.cp(output_parent)
 
     if args.merge and len(step1s) > 1:
         sys.stdout.write("Merging files\n")
@@ -228,8 +317,3 @@ if __name__ == "__main__":
         for step1 in step1s:
             step1.save()
             sys.stdout.write(f"upadte the pred.list file in {step1.dir}\n")
-
-
-
-
-
