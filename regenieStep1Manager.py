@@ -98,7 +98,7 @@ class RegenieStep1:
                 sys.stdout.write(
                     f"{row['phenotype']} loco file {row['path']} not exists, will try to find it in local loco files to match the phenotype\n"
                 )
-                new_path = self.step1_list_dir.parent / f"{row['phenotype']}.loco"
+                new_path = Path(self.step1_list_dir).parent / f"{row['phenotype']}.loco"
                 if new_path.exists():
                     new_step1_df.loc[idx, "local_path"] = new_path.resolve()
                     new_step1_df.loc[idx, "status"] = 1
