@@ -206,7 +206,7 @@ def concatRegeineStep1(to_merge_list, force=False):
             DataFramePretty(merged_step1_df.sort_values(by="old_phenotype")).show()
 
     # return new step1 object
-    merged_RegeineStep1 = RegenieStep1(pred_df=merged_step1_df)
+    merged_RegeineStep1 = RegenieStep1(step1_df=merged_step1_df)
     # fix
     merged_RegeineStep1.fix()
     return merged_RegeineStep1
