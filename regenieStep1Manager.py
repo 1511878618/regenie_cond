@@ -237,6 +237,11 @@ def getParser():
 
     parser.add_argument('-i', '--input', default=['step1'], help='input folder of step1, -i step1_1 step1_2', nargs='+')
     parser.add_argument('-l', '--list', help='list all phenotypes', action='store_true')
+    parser.add_argument(
+        "--fix",
+        help="fix the path in pred.list file; find the matched loco file in the step1.list same folder",
+        action="store_true",
+    )
     parser.add_argument('-m', '--merge', help='merge all pred.list files', action='store_true')
     parser.add_argument('-o', '--output', type=str, help='output folder', default='new_step1')
     parser.add_argument('--force', help='force merge the pred.list files', action='store_true')
