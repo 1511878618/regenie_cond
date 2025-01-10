@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # -*- encoding: utf-8 -*-
-'''
+"""
 @Description:       :
-@Date     :2024/02/20 14:06:15
+@Date     :2025/01/07 20:58:04
 @Author      :Tingfeng Xu
-@version      :1.0
-'''
+@version      :1.1
+"""
 
 from pathlib import Path
 import sys
@@ -80,7 +80,10 @@ class RegenieStep1:
         elif step1_list_dir is not None:
             self.step1_list_dir = step1_list_dir
             self.step1_df = pd.read_csv(
-                self.step1_list_dir, sep="\s+", header=None, names=["phenotype", "path"]
+                self.step1_list_dir,
+                sep=r"\s+",
+                header=None,
+                names=["phenotype", "path"],
             )
         else:
             raise ValueError("step1_list_dir or step1_df should be provided")
@@ -94,17 +97,16 @@ class RegenieStep1:
         new_step1_df = self.step1_df.copy()
         for idx, row in self.step1_df.iterrows():
             # check the path exists
-            if not Path(row['path']).exists():
-                sys.stdout.write(
-                    f"{row['phenotype']} loco file {row['path']} not exists, will try to find it in local loco files to match the phenotype\n"
-                )
+            if not Path(row["path"]).exists():
 
                 new_path = Path(self.step1_list_dir).parent / Path(row["path"]).name
-                sys.stdout.write(f"Try to find the matched loco file {new_path}\n")
+                msg = f"{row['phenotype']} loco file {row['path']} not exists, will try to find it in local loco files to match the phenotype, try to find the matched loco file {new_path}\n"
+                sys.stdout.write(msg)
 
                 if new_path.exists():
                     new_step1_df.loc[idx, "local_path"] = new_path.resolve()
                     new_step1_df.loc[idx, "status"] = 1
+
                 else:
                     sys.stderr.write(
                         f"Can not find the matched loco file for {row['phenotype']} \n"
@@ -143,13 +145,15 @@ class RegenieStep1:
         new_step1_df = self.step1_df.copy()
         for idx, row in self.step1_df.iterrows():
             # new path
-            new_path = tgt_dir / row["phenotype"]
+            new_path = tgt_dir / f"{row['phenotype']}.loco"
 
             if new_path.exists():
                 raise ValueError(f"{new_path} already exists")
             else:
                 shutil.copyfile(row["local_path"], new_path)
-                new_step1_df.loc[idx, "local_path"] = new_path
+                new_step1_df.loc[idx, "local_path"] = new_path.resolve()
+
+        self.step1_df = new_step1_df
         print("All loco files copied to the new folder")
 
     def save(self, new_step1_dir, cp=False, replace=False):
@@ -162,15 +166,15 @@ class RegenieStep1:
         new_step1_dir.parent.mkdir(parents=True, exist_ok=True)
 
         # save the step1 file
-        self.step1_df[["phenotype", "local_path"]].to_csv(
-            new_step1_dir, sep=" ", index=False, header=False
-        )
 
         # copy all loco files to the new folder
         if cp:
             parent_dir = new_step1_dir.parent
             self.cp(parent_dir)
 
+        self.step1_df[["phenotype", "local_path"]].to_csv(
+            new_step1_dir, sep=" ", index=False, header=False
+        )
 
 def concatRegeineStep1(to_merge_list, force=False):
     """
